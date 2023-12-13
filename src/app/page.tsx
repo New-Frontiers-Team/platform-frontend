@@ -13,7 +13,7 @@ export default function Home() {
           />
         </div>
         <div className="flex flex-col justify-center items-center gap-2">
-          <div className="relative w-[430px] h-[70px] ">
+          <div className="relative w-[430px] h-[70px]">
             <Image
               src="/new-frontiers.png"
               alt="New Frontiers name"
