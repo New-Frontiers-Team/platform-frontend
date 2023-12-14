@@ -1,4 +1,4 @@
-import { Avatar, Box, Card, CardContent, Container, CssBaseline, Paper, Typography } from "@mui/material";
+import { Avatar, Box, Container, CssBaseline, Paper, Typography } from "@mui/material";
 import StarsIcon from '@mui/icons-material/Stars';
 import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
