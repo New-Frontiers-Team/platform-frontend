@@ -1,7 +1,9 @@
 "use client"
-import api from "@/app/helpers/api";
+import api from "@/helpers/api";
+import { AuthService } from "@/services/api/auth.service";
 import { Box, Button, Container, CssBaseline, Link, Paper, TextField, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 
 type Data = {
   email: string,
@@ -12,12 +14,13 @@ export default function AuthLogin() {
   const { handleSubmit, register } = useForm<Data>()
 
   const onSubmit = async (data: Data) => {
-    const response = await api.post('http://localhost:3001/auth/login', {
-      email: data.email,
-      password: data.password
-    })
-
-    console.log(response)
+    try {
+      const response = await AuthService.login(data.email, data.password)
+      localStorage.setItem("access-token", response.accessToken)
+    } catch (error) {
+      console.error(error)
+      toast.error('Usuário ou senha incorreto.')
+    }
   }
 
   return (
