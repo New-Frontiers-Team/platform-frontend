@@ -1,5 +1,4 @@
 "use client"
-import api from "@/helpers/api";
 import { AuthService } from "@/services/api/auth.service";
 import { Box, Button, Container, CssBaseline, Link, Paper, TextField, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
@@ -11,7 +10,12 @@ type Data = {
 }
 
 export default function AuthLogin() {
-  const { handleSubmit, register } = useForm<Data>()
+  const { handleSubmit, register } = useForm<Data>({
+    defaultValues: {
+      email: "",
+      password: ""
+    }
+  })
 
   const onSubmit = async (data: Data) => {
     try {
@@ -35,13 +39,13 @@ export default function AuthLogin() {
             <TextField required label='Email' {...register("email")} />
             <TextField required type='password' label='Password' {...register("password")} />
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'start', width: '100%', mt: 0.8, mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'end', width: '100%', mt: 0.8, mb: 3 }}>
             <Link href='#' variant='subtitle2' underline='none'>Forgot password?</Link>
           </Box>
           <Box sx={{ display: 'flex', width: '100%', mb: 2 }}>
-            <Button type="submit" variant='outlined' sx={{ width: '100%' }}>Login</Button>
+            <Button type="submit" variant='outlined' sx={{ width: '100%', padding: '12px 0px' }}>Login</Button>
           </Box>
-          <Link href='#' variant='subtitle2' underline='none'>Create Account</Link>
+          <Link href='/app/auth/register' variant='subtitle2' underline='none'>Create Account</Link>
         </Paper>
       </Container>
       <Typography variant="caption" sx={{ color: 'gray' }} mt={4}>New Frontiers Team © 2022</Typography>
