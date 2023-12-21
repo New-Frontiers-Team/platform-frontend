@@ -1,18 +1,17 @@
 "use client"
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-});
+import AuthContext from '@/contexts/auth';
+import { useContext, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <ThemeProvider theme={darkTheme}>
-      <CssBaseline />
-      {children}
-    </ThemeProvider>
-  )
+  const { signed } = useContext(AuthContext)
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!signed) {
+      router.push('/auth/login')
+    }
+  }, [signed])
+
+  return children
 }

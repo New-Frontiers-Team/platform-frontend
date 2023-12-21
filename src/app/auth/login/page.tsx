@@ -1,6 +1,7 @@
 "use client"
-import { AuthService } from "@/services/api/auth.service";
-import { Box, Button, Container, CssBaseline, Link, Paper, TextField, Typography } from "@mui/material";
+import AuthContext from "@/contexts/auth";
+import { Box, Button, CircularProgress, Container, CssBaseline, Link, Paper, TextField, Typography } from "@mui/material";
+import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
@@ -10,6 +11,8 @@ type Data = {
 }
 
 export default function AuthLogin() {
+  const { login } = useContext(AuthContext)
+
   const { handleSubmit, register } = useForm<Data>({
     defaultValues: {
       email: "",
@@ -17,13 +20,21 @@ export default function AuthLogin() {
     }
   })
 
+  const [loading, setLoading] = useState(false)
+
   const onSubmit = async (data: Data) => {
     try {
-      const response = await AuthService.login(data.email, data.password)
-      localStorage.setItem("access-token", response.accessToken)
-    } catch (error) {
-      console.error(error)
-      toast.error('Usuário ou senha incorreto.')
+      setLoading(true)
+      await login({ email: data.email, password: data.password })
+      toast.success('Logged in successfully!')
+    } catch (error: any) {
+      if (error?.response?.data?.message) {
+        toast.error(error.response.data.message)
+      } else {
+        toast.error('Something went wrong.')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -43,9 +54,9 @@ export default function AuthLogin() {
             <Link href='#' variant='subtitle2' underline='none'>Forgot password?</Link>
           </Box>
           <Box sx={{ display: 'flex', width: '100%', mb: 2 }}>
-            <Button type="submit" variant='outlined' sx={{ width: '100%', padding: '12px 0px' }}>Login</Button>
+            <Button type="submit" variant='outlined' disabled={loading} sx={{ width: '100%', height: "56px"}}>{loading ? <CircularProgress size={20} /> : "Login"}</Button>
           </Box>
-          <Link href='/app/auth/register' variant='subtitle2' underline='none'>Create Account</Link>
+          <Link href='/auth/register' variant='subtitle2' underline='none'>Create Account</Link>
         </Paper>
       </Container>
       <Typography variant="caption" sx={{ color: 'gray' }} mt={4}>New Frontiers Team © 2022</Typography>

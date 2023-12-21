@@ -11,12 +11,4 @@ export class AuthService {
             password: password
         }).then(response => response.data)
     }
-
-    public static register(username: string, email: string, password: string) {
-        return api.post('http://localhost:3001/auth/register', {
-            username: username,
-            email: email,
-            password: password
-        })
-    }
 }
