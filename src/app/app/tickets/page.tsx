@@ -3,11 +3,10 @@ import { TicketService } from "@/services/api/ticket.service";
 import { Box, Button, Container, CssBaseline, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography, useForkRef } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 const columns: GridColDef[] = [
-  { field: 'id', headerName: 'ID', width: 90 },
   {
     field: 'title',
     headerName: 'Title',
@@ -22,17 +21,10 @@ const columns: GridColDef[] = [
     headerName: 'Status',
   },
   {
-    field: 'date',
+    field: 'createdAt',
+    width: 200,
     headerName: 'Date',
   }
-];
-
-const rows = [
-  { id: 1, title: 'Game script bug', status: 'Pending', date: '12/12/2023' },
-  { id: 2, title: 'Help on pucharse', status: 'Resolved', date: '01/04/2023' },
-  { id: 3, title: 'Game script bug', status: 'Pending', date: '01/04/2023' },
-  { id: 4, title: 'Game script bug', status: 'Resolved', date: '01/04/2023' },
-  { id: 5, title: 'Game script bug test', status: 'Pending', date: '01/04/2023' },
 ];
 
 type Data = {
@@ -40,9 +32,33 @@ type Data = {
   description: string
 }
 
-export default function SystemTicket() {
+export default function SystemTickets() {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [tickets, setTickets] = useState([])
+  const [pagination, setPagination] = useState({
+    page: 0,
+    pageSize: 5
+  })
+  const [total, setTotal] = useState(0)
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        setLoading(true)
+        const tickets = await TicketService.findTickets(pagination.page + 1, pagination.pageSize)
+
+        setTickets(tickets.data)
+        setTotal(tickets.meta.total)
+      } catch (error) {
+        console.error(error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTickets()
+  }, [pagination])
 
   const router = useRouter()
 
@@ -94,8 +110,14 @@ export default function SystemTicket() {
             </FormControl>
           </Box>
           <DataGrid
-            rows={rows}
+            rows={tickets}
+            loading={loading}
             columns={columns}
+            paginationMode="server"
+            pageSizeOptions={[5, 10, 15, 20, 25]}
+            paginationModel={pagination}
+            onPaginationModelChange={setPagination}
+            rowCount={total}
             initialState={{
               columns: {
                 columnVisibilityModel: {

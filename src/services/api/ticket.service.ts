@@ -8,4 +8,13 @@ export class TicketService {
             description: description
         }).then(response => response.data)
     }
+
+    public static findTickets(page: number, limit: number) {
+      return api.get('/tickets', {
+        params: {
+          page: page,
+          limit: limit
+        }
+      }).then(response => response.data)
+    }
 }
