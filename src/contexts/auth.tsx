@@ -1,5 +1,6 @@
 "use client"
 import api from "@/helpers/api";
+import { User } from "@/models/user.model";
 import { AuthService } from "@/services/api/auth.service";
 import { UsersService } from "@/services/api/users.service";
 import { createContext, useEffect, useState } from "react";
@@ -13,12 +14,6 @@ type AuthContextData = {
   signed: boolean;
   login({ email, password }: LoginData): Promise<void>;
   user: User | undefined;
-}
-
-type User = {
-  username: string;
-  email: string;
-  role: string;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);

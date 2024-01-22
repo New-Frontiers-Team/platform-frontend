@@ -6,7 +6,7 @@ type LoginResponse = {
 
 export class AuthService {
     public static login(email: string, password: string): Promise<LoginResponse> {
-        return api.post('http://localhost:3001/auth/login', {
+        return api.post('/auth/login', {
             email: email,
             password: password
         }).then(response => response.data)

@@ -25,7 +25,7 @@ export default function Home() {
         <div className="flex grow items-center">
           <div className="flex flex-col items-center">
             <h1 className="text-[90px] font-bold text-center leading-[86px]">COMING SOON</h1>
-            <p className="text-[28px] font-bold text-certer text-gray-300">NEXT YEAR</p>
+            <p className="text-[28px] font-bold text-certer text-gray-300">ON THIS YEAR</p>
           </div>
         </div>
         <p className=" text-center text-gray-600 pb-2">New Frontiers Team © 2022</p>
