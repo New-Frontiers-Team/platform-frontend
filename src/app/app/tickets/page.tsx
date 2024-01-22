@@ -23,8 +23,11 @@ const columns: GridColDef[] = [
   },
   {
     field: 'createdAt',
-    width: 200,
+    width: 120,
     headerName: 'Date',
+    valueFormatter(params) {
+      return params.value ? (new Date(params.value)).toLocaleDateString() : ''
+    },
   }
 ];
 
