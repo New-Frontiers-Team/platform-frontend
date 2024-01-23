@@ -2,7 +2,7 @@
 import yup from "@/helpers/validation";
 import { TicketService } from "@/services/api/ticket.service";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

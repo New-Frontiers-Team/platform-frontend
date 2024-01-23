@@ -10,7 +10,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
-import TicketDialog from "@/components/ticketDialog";
+import TicketDialog from "@/components/ticket/ticketDialog";
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import { useRouter } from "next/navigation";
 import { Ticket } from "@/models/ticket.model";
@@ -98,9 +98,9 @@ export default function SystemTickets() {
       type: 'actions',
       getActions: (params) => [
         <GridActionsCellItem icon={<ChatIcon />} label="Chat" onClick={() => { router.push(`/app/tickets/${params.id}`) }} />,
-        <GridActionsCellItem icon={<PersonAddIcon />} onClick={() => handleAssume(params.row.id)} label="Assume Ticket" disabled={!!params.row.responsible} showInMenu />,
-        <GridActionsCellItem icon={<CheckCircleIcon />} label="Close Ticket" showInMenu />,
-        <GridActionsCellItem icon={<DeleteIcon />} label="Delete Ticket" showInMenu />
+        <GridActionsCellItem icon={<PersonAddIcon />} onClick={() => handleAssumeTicket(params.row.id)} label="Assume Ticket" disabled={!!params.row.responsible} showInMenu />,
+        <GridActionsCellItem icon={<CheckCircleIcon />} onClick={() => handleCloseTicket(params.row.id)} label="Close Ticket" disabled={params.row.status !== 'assumed' ? true : false} showInMenu />,
+        <GridActionsCellItem icon={<DeleteIcon />} disabled={params.row.status === 'closed' ? false : true} label="Delete Ticket" showInMenu />
       ]
     }
   ];
@@ -131,9 +131,17 @@ export default function SystemTickets() {
     fetchTickets()
   }, [pagination])
 
-  const handleAssume = async (id: string) => {
+  const handleAssumeTicket = async (id: string) => {
     const ticket = await TicketService.assumeTicket(id)
+    refreshData(ticket)
+  }
 
+  const handleCloseTicket = async (id: string) => {
+    const ticket = await TicketService.closeTicket(id)
+    refreshData(ticket)
+  }
+
+  const refreshData = (ticket: any) => {
     setTickets((values) => {
       const tickets = [...values]
       const index = tickets.findIndex((value) => value.id === ticket.id)

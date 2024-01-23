@@ -21,4 +21,8 @@ export class TicketService {
   public static assumeTicket(ticketId: string) {
     return api.put(`/tickets/${ticketId}`).then(response => response.data)
   }
+
+  public static closeTicket(ticketId: string) {
+    return api.post(`/tickets/${ticketId}`).then(response => response.data)
+  }
 }
