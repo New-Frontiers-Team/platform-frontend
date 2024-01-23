@@ -160,7 +160,7 @@ export default function SystemTickets() {
       <Paper elevation={3} sx={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 5 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography variant="h4">Tickets</Typography>
-          {view ? <Button variant="outlined" size="large" onClick={handleClickOpen}>Create</Button> : null}
+          {user ? isAdmin(user.role) ? null : <Button variant="outlined" size="large" onClick={handleClickOpen}>Create</Button> : null}
         </Box>
         {view ?
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
