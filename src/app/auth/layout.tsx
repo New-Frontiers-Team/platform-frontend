@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
     useEffect(() => {
         if (signed) {
-            router.push('/app/profile')
+            router.push('/app/tickets')
         }
     }, [signed])
 

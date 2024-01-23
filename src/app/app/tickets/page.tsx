@@ -1,50 +1,109 @@
 "use client"
+import AuthContext from "@/contexts/auth";
+import { isAdmin } from "@/helpers/authorization";
 import { TicketService } from "@/services/api/ticket.service";
-import { Box, Button, CircularProgress, Container, CssBaseline, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography, useForkRef } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Box, Button, Container, CssBaseline, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { useContext, useEffect, useState } from "react";
+import ChatIcon from '@mui/icons-material/Chat';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import TicketDialog from "@/components/ticketDialog";
+import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
-
-const columns: GridColDef[] = [
-  {
-    field: 'title',
-    headerName: 'Title',
-    flex: 1
-  },
-  {
-    field: 'user',
-    headerName: 'User',
-  },
-  {
-    field: 'status',
-    headerName: 'Status',
-  },
-  {
-    field: 'createdAt',
-    width: 120,
-    headerName: 'Date',
-    valueFormatter(params) {
-      return params.value ? (new Date(params.value)).toLocaleDateString() : ''
-    },
-  }
-];
-
-type Data = {
-  title: string,
-  description: string
-}
+import { Ticket } from "@/models/ticket.model";
 
 export default function SystemTickets() {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [tickets, setTickets] = useState([])
+  const [tickets, setTickets] = useState<Ticket[]>([])
   const [pagination, setPagination] = useState({
     page: 0,
-    pageSize: 5
+    pageSize: 10
   })
   const [total, setTotal] = useState(0)
+  const [view, setView] = useState(true)
+
+  const { user } = useContext(AuthContext)
+  const router = useRouter()
+
+  const columns: GridColDef[] = [
+    {
+      field: 'title',
+      headerName: 'Title',
+      flex: 1
+    },
+    {
+      field: 'user',
+      headerName: 'User',
+      width: 150,
+      valueFormatter(params) {
+        return params.value.username
+      },
+    },
+    {
+      field: 'responsible',
+      headerName: 'Responsible',
+      width: 150,
+      valueFormatter(params) {
+        return params.value ? params.value.username : ''
+      }
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+      width: 150,
+
+      renderCell(params) {
+        const status = params.value
+
+        let icon, text;
+        switch (status) {
+          case 'new':
+            icon = <ConfirmationNumberIcon />
+            text = 'Opened'
+            break
+          case 'assumed':
+            icon = <WorkHistoryIcon />
+            text = 'Assumed'
+            break;
+          case 'closed':
+            icon = <CheckCircleIcon />
+            text = 'Closed'
+            break
+          default:
+            icon = undefined
+        }
+
+        return (
+          <div className="flex justify-center">
+            {icon}
+            <Typography sx={{ ml: 1 }}>{text}</Typography>
+          </div>
+        )
+      },
+    },
+    {
+      field: 'createdAt',
+      width: 120,
+      headerName: 'Date',
+      valueFormatter(params) {
+        return params.value ? (new Date(params.value)).toLocaleDateString() : ''
+      },
+    },
+    {
+      field: 'actions',
+      type: 'actions',
+      getActions: (params) => [
+        <GridActionsCellItem icon={<ChatIcon />} label="Chat" onClick={() => { router.push(`/app/tickets/${params.id}`) }} />,
+        <GridActionsCellItem icon={<PersonAddIcon />} onClick={() => handleAssume(params.row.id)} label="Assume Ticket" disabled={!!params.row.responsible} showInMenu />,
+        <GridActionsCellItem icon={<CheckCircleIcon />} label="Close Ticket" showInMenu />,
+        <GridActionsCellItem icon={<DeleteIcon />} label="Delete Ticket" showInMenu />
+      ]
+    }
+  ];
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -54,6 +113,14 @@ export default function SystemTickets() {
 
         setTickets(tickets.data)
         setTotal(tickets.meta.total)
+
+        if (user) {
+          if (!tickets.meta.total) {
+            if (!isAdmin(user.role)) {
+              setView(false)
+            }
+          }
+        }
       } catch (error) {
         console.error(error)
       } finally {
@@ -64,14 +131,20 @@ export default function SystemTickets() {
     fetchTickets()
   }, [pagination])
 
-  const router = useRouter()
+  const handleAssume = async (id: string) => {
+    const ticket = await TicketService.assumeTicket(id)
 
-  const { handleSubmit, register } = useForm<Data>({
-    defaultValues: {
-      title: "",
-      description: ""
-    }
-  })
+    setTickets((values) => {
+      const tickets = [...values]
+      const index = tickets.findIndex((value) => value.id === ticket.id)
+
+      if (index !== -1) {
+        tickets[index] = ticket
+      }
+
+      return tickets
+    })
+  }
 
   const handleClickOpen = () => {
     setOpen(true)
@@ -81,29 +154,15 @@ export default function SystemTickets() {
     setOpen(false)
   }
 
-  const onSubmit = async (data: Data) => {
-    try {
-      setLoading(true)
-      const ticket = await TicketService.create(data.title, data.description)
-      router.push(`/app/tickets/${ticket.id}`)
-      toast.success('Ticket created successfully!')
-    } catch (e) {
-      toast.error('Something went wrong!')
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
     <Container component="main" maxWidth="lg" sx={{ paddingTop: 5 }}>
       <CssBaseline />
       <Paper elevation={3} sx={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 5 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography variant="h4">Tickets</Typography>
-          {total ? <Button variant="outlined" size="large" onClick={handleClickOpen}>Create</Button> : null}
+          {view ? <Button variant="outlined" size="large" onClick={handleClickOpen}>Create</Button> : null}
         </Box>
-        {total ?
+        {view ?
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField type="search" placeholder="Search" fullWidth />
@@ -122,39 +181,30 @@ export default function SystemTickets() {
                 loading={loading}
                 columns={columns}
                 paginationMode="server"
-                pageSizeOptions={[5, 10, 15, 20, 25]}
+                pageSizeOptions={[10, 20, 30, 40]}
                 paginationModel={pagination}
                 onPaginationModelChange={setPagination}
                 rowCount={total}
+
                 initialState={{
                   columns: {
                     columnVisibilityModel: {
-                      user: false
+                      user: user ? isAdmin(user.role) : false,
+                      actions: user ? isAdmin(user.role) : false,
                     }
                   }
                 }}
               />
             </Box>
           </Box> :
-          <Box sx={{display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <Typography variant="h4">You do not have any tickets at the moment</Typography>
             <Typography variant="overline">You can create a ticket for our team to resolve your issue!</Typography>
-            <Button variant="outlined" size="large" onClick={handleClickOpen} sx={{mt: 2}}>Create ticket</Button>
+            <Button variant="outlined" size="large" onClick={handleClickOpen} sx={{ mt: 2 }}>Create ticket</Button>
           </Box>
         }
       </Paper>
-      <Dialog open={open} onClose={handleClose} component='form' onSubmit={handleSubmit(onSubmit)}>
-        <DialogTitle>Ticket</DialogTitle>
-        <DialogContent>
-          <DialogContentText>Enter some information below to have your ticket opened.</DialogContentText>
-          <TextField autoFocus required label="Title" margin="dense" variant="filled" fullWidth {...register("title")} />
-          <TextField autoFocus required label="Description" margin="dense" variant="filled" fullWidth multiline rows={3} {...register("description")} />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button type="submit" disabled={loading}>{loading ? <CircularProgress size={20} /> : "Create"}</Button>
-        </DialogActions>
-      </Dialog>
+      <TicketDialog isOpen={open} onClose={handleClose} />
     </Container>
   )
 }
