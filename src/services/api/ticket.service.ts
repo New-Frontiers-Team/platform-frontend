@@ -25,4 +25,8 @@ export class TicketService {
   public static closeTicket(ticketId: string) {
     return api.post(`/tickets/${ticketId}`).then(response => response.data)
   }
+
+  public static deleteTicket(ticketId: string) {
+    return api.delete(`/tickets/${ticketId}`).then(response => response.data)
+  }
 }

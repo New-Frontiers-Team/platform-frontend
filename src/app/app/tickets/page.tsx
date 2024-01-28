@@ -14,6 +14,7 @@ import TicketDialog from "@/components/ticket/ticketDialog";
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import { useRouter } from "next/navigation";
 import { Ticket } from "@/models/ticket.model";
+import { toast } from "react-toastify";
 
 export default function SystemTickets() {
   const [open, setOpen] = useState(false)
@@ -96,12 +97,22 @@ export default function SystemTickets() {
     {
       field: 'actions',
       type: 'actions',
-      getActions: (params) => [
-        <GridActionsCellItem icon={<ChatIcon />} label="Chat" onClick={() => { router.push(`/app/tickets/${params.id}`) }} />,
-        <GridActionsCellItem icon={<PersonAddIcon />} onClick={() => handleAssumeTicket(params.row.id)} label="Assume Ticket" disabled={!!params.row.responsible} showInMenu />,
-        <GridActionsCellItem icon={<CheckCircleIcon />} onClick={() => handleCloseTicket(params.row.id)} label="Close Ticket" disabled={params.row.status !== 'assumed' ? true : false} showInMenu />,
-        <GridActionsCellItem icon={<DeleteIcon />} disabled={params.row.status === 'closed' ? false : true} label="Delete Ticket" showInMenu />
-      ]
+      sortable: false,
+      filterable: false,
+      getActions: (params) => {
+
+        let actions = [<GridActionsCellItem icon={<ChatIcon />} label="Chat" onClick={() => { router.push(`/app/tickets/${params.id}`) }} />]
+
+        if (user && isAdmin(user.role)) {
+          actions = [
+            ...actions,
+            <GridActionsCellItem icon={<PersonAddIcon />} onClick={() => handleAssumeTicket(params.row.id)} label="Assume Ticket" disabled={!!params.row.responsible} showInMenu />,
+            <GridActionsCellItem icon={<CheckCircleIcon />} onClick={() => handleCloseTicket(params.row.id)} label="Close Ticket" disabled={params.row.status !== 'assumed' ? true : false} showInMenu />,
+            <GridActionsCellItem icon={<DeleteIcon />} onClick={() => handleDeleteTicket(params.row.id)} label="Delete Ticket" showInMenu />]
+        }
+
+        return actions
+      }
     }
   ];
 
@@ -132,13 +143,30 @@ export default function SystemTickets() {
   }, [pagination])
 
   const handleAssumeTicket = async (id: string) => {
-    const ticket = await TicketService.assumeTicket(id)
-    refreshData(ticket)
+    try {
+      const ticket = await TicketService.assumeTicket(id)
+      refreshData(ticket)
+    } catch (e: any) {
+      toast.error(e.response.data.message)
+    }
   }
 
   const handleCloseTicket = async (id: string) => {
-    const ticket = await TicketService.closeTicket(id)
-    refreshData(ticket)
+    try {
+      const ticket = await TicketService.closeTicket(id)
+      refreshData(ticket)
+    } catch (e: any) {
+      toast.error(e.response.data.message)
+    }
+  }
+
+  const handleDeleteTicket = async (id: string) => {
+    try {
+      const ticket = await TicketService.deleteTicket(id)
+      refreshData(ticket)
+    } catch (e: any) {
+      toast.error(e.response.data.message)
+    }
   }
 
   const refreshData = (ticket: any) => {
@@ -147,9 +175,12 @@ export default function SystemTickets() {
       const index = tickets.findIndex((value) => value.id === ticket.id)
 
       if (index !== -1) {
-        tickets[index] = ticket
+        if (ticket.deleted) {
+          tickets.splice(index, 1)
+        } else {
+          tickets[index] = ticket
+        }
       }
-
       return tickets
     })
   }
@@ -197,8 +228,7 @@ export default function SystemTickets() {
                 initialState={{
                   columns: {
                     columnVisibilityModel: {
-                      user: user ? isAdmin(user.role) : false,
-                      actions: user ? isAdmin(user.role) : false,
+                      user: user ? isAdmin(user.role) : false
                     }
                   }
                 }}
