@@ -15,9 +15,12 @@ import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import { useRouter } from "next/navigation";
 import { Ticket } from "@/models/ticket.model";
 import { toast } from "react-toastify";
+import ConfirmDialog from "@/components/ticket/confirmDialog";
 
 export default function SystemTickets() {
   const [open, setOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [ticketId, setTicketId] = useState('')
   const [loading, setLoading] = useState(false)
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [pagination, setPagination] = useState({
@@ -160,13 +163,23 @@ export default function SystemTickets() {
     }
   }
 
-  const handleDeleteTicket = async (id: string) => {
-    try {
-      const ticket = await TicketService.deleteTicket(id)
-      refreshData(ticket)
-    } catch (e: any) {
-      toast.error(e.response.data.message)
+  const handleDeleteTicket = (id: string) => {
+    setConfirmOpen(true)
+    setTicketId(id)
+  }
+
+  const handleConfirm = async () => {
+    if (ticketId) {
+      try {
+        const ticket = await TicketService.deleteTicket(ticketId)
+        refreshData(ticket)
+        toast.success('The ticket has been successfully deleted.')
+      } catch (e: any) {
+        toast.error(e.response.data.message)
+      }
     }
+    setTicketId('')
+    setConfirmOpen(false)
   }
 
   const refreshData = (ticket: any) => {
@@ -191,6 +204,10 @@ export default function SystemTickets() {
 
   const handleClose = () => {
     setOpen(false)
+  }
+
+  const handleConfirmClose = () => {
+    setConfirmOpen(false)
   }
 
   return (
@@ -243,6 +260,7 @@ export default function SystemTickets() {
         }
       </Paper>
       <TicketDialog isOpen={open} onClose={handleClose} />
+      <ConfirmDialog isOpen={confirmOpen} onClose={handleConfirmClose} onConfirm={handleConfirm} />
     </Container>
   )
 }
